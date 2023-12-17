@@ -1,1 +1,1 @@
-SELECT * FROM tbl_info
+SELECT * FROM tbl_transaction
