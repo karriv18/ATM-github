@@ -96,21 +96,32 @@ public class Transaction {
 	}
 	
 	public void setTransfer(int amount, int accID, Users user) {
-		try {			
-			int balance = 0;
-			balance = selectBalance(accID);
-			balance += amount; 
-			ps = conn.prepareStatement(SET_BALANCE);
+		try {
+			// this is for the main account transfer
+			int balance = selectBalance(user.getID());
+			ps = conn.prepareStatement(SET_BALANCE); 
+			balance -= amount;
 			ps.setInt(1, balance);
+			ps.setInt(2, user.getID());
+			ps.executeUpdate();
+			
+			// this is for transferring another account 
+			int balanceTransfery = 0;
+			balanceTransfery = selectBalance(accID);
+			balanceTransfery += amount; 
+			
+			ps = conn.prepareStatement(SET_BALANCE);
+			ps.setInt(1, balanceTransfery);
 			ps.setInt(2, accID);
 			ps.executeUpdate();
-			System.out.println(balance);
+			
 			
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
+	// setting tag for transaction 
 	public void setTransaction(int id, String transactionType) {
 		try {
 			conn = con.getConnection();
@@ -125,6 +136,8 @@ public class Transaction {
 			e.printStackTrace();
 		}
 	}
+	
+	// printing balance 
 	public int selectBalance(int ID) {
 		try {
 			conn = con.getConnection();
@@ -136,7 +149,6 @@ public class Transaction {
 			
 			while (rs.next()) {
 				balance = rs.getInt("balance");
-				System.out.println(balance);
 			}
 			return balance;
 		}
