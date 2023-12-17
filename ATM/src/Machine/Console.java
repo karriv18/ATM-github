@@ -1,5 +1,4 @@
 package Machine;
-
 import java.util.Scanner;
 public class Console {
 	private Transaction transaction = new Transaction();
@@ -126,7 +125,13 @@ public class Console {
 	}
 	private void gotoTransfer(Users user) {
 		System.out.println("Transfer");
+		System.out.println("Enter account ID: ");
+	
+		int accID = scanner.nextInt();
 		
+		System.out.println("Transfer ammount: ");
+		int amount = scanner.nextInt();
+		transaction.setTransfer(amount, accID, user);
 	}
 	private void gotoSignOut() {
 		System.out.println("Sign Out");

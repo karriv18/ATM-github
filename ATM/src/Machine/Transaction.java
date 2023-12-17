@@ -2,14 +2,16 @@ package Machine;
 import java.sql.*;
 import java.util.*;
 public class Transaction {
-//	private final String GET_ID  = "SELECT id FROM tbl_info WHERE firstName = ?;";
+	private final String []Transaction = {"WW", "DD", "PB", "BI", "ST"};
 	private final String SET_BALANCE = "UPDATE tbl_balance SET balance = ? WHERE userId = ?";
 	private final String SELECT_BALANCE = "SELECT balance FROM tbl_balance WHERE userId = ?;";
+	private final String INSERT_TRAN = "INSERT INTO tbl_transaction (transactionDate, userId, transactionType)"
+										+ "VALUES(CURDATE(), ?, ?)";
 	private DBconn con = new DBconn();
 	private Connection conn = null;
 	private ResultSet rs = null;
 	private PreparedStatement ps = null;
-//	private final String ID = "SELECT id FROM tbl_info WHERE firstname = ?";
+
 	private int ID;
 	
 	public Transaction() {}
@@ -22,24 +24,14 @@ public class Transaction {
 	
 	public void setWithdraw(int input, Users user) {
 		try {
+			Console cons = new Console();
 			int UID = user.getID();
-			conn = con.getConnection();
-			ps = conn.prepareStatement(SELECT_BALANCE);
-			ps.setInt(1, UID);
 			
 			/*
 			 * if there is no statement on regards to update there will be no execute update
 			 * function
 			 */
-			
-			
-			rs = ps.executeQuery();
-			int balance = 0;
-			
-			while (rs.next()) {
-				balance = rs.getInt("balance");
-				System.out.println(balance + "balance");
-			}
+			int balance = selectBalance(UID);
 			
 			balance -= input;
 			System.out.println(UID);
@@ -50,7 +42,9 @@ public class Transaction {
 			ps.executeUpdate();
 			System.out.println("Success");
 			System.out.println("Your new Balance is : " + balance);
-			
+			// setting transaction, tagging for database
+			setTransaction(UID, Transaction[0]);
+			cons.navigate(user);
 		} catch (SQLException e) {
 			// TODO: handle exception
 			e.printStackTrace();
@@ -61,17 +55,8 @@ public class Transaction {
 		try {
 			
 			int UID = user.getID();
-			System.out.println(user.getID() + "UID");
-			conn = con.getConnection();
 
-			ps = conn.prepareStatement(SELECT_BALANCE);
-			ps.setInt(1, UID);
-			rs = ps.executeQuery();
-			
-			int balance = 0;
-			while(rs.next()) {
-				balance = rs.getInt("balance");
-			}
+			int balance = selectBalance(UID);
 			/*
 			 * while(rs.next()) { balance = rs.getInt("balance");
 			 * System.out.println(balance); }
@@ -84,7 +69,7 @@ public class Transaction {
 			ps.setInt(2, UID); 
 			
 			ps.executeUpdate();
-
+			setTransaction(UID, Transaction[1]);
 //			printBalance(user);
 			
 		} catch (SQLException e) {
@@ -95,39 +80,69 @@ public class Transaction {
 	public int printBalance(Users user) {
 		try {
 			int UID = user.getID();
-			conn = con.getConnection();
-			ps = conn.prepareStatement(SELECT_BALANCE);
-			ps.setInt(1, UID);
 
-			rs = ps.executeQuery();
-			int balance = 0;
+			int balance = selectBalance(UID);
 			
-			while (rs.next()) {
-				balance = rs.getInt("balance");
-				System.out.println(balance);
-			}
-			
+			setTransaction(UID, Transaction[2]);
 			return balance;
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
+			return 1;
 		}
-		
-		return 0;
 	}
 	
 	public void payBills(Users user) {
 		System.out.println("Hi, " + user.getFirstName() + ". This is still under construction");
 	}
 	
-	public void setTransfer(int balance, Users user) {
-		try {
-			Scanner scan = new Scanner(System.in);
+	public void setTransfer(int amount, int accID, Users user) {
+		try {			
+			int balance = 0;
+			balance = selectBalance(accID);
+			balance += amount; 
+			ps = conn.prepareStatement(SET_BALANCE);
+			ps.setInt(1, balance);
+			ps.setInt(2, accID);
+			ps.executeUpdate();
+			System.out.println(balance);
 			
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void setTransaction(int id, String transactionType) {
+		try {
+			conn = con.getConnection();
+			ps = conn.prepareStatement(INSERT_TRAN);
+			
+			ps.setInt(1, id);
+			ps.setString(2, transactionType);
+			ps.executeUpdate();
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	public int selectBalance(int ID) {
+		try {
 			conn = con.getConnection();
 			ps = conn.prepareStatement(SELECT_BALANCE);
-			ps.setInt(1, balance);
-		}catch(Exception e) {
+			ps.setInt(1, ID);
+			rs = ps.executeQuery();
 			
+			int balance = 0;
+			
+			while (rs.next()) {
+				balance = rs.getInt("balance");
+				System.out.println(balance);
+			}
+			return balance;
 		}
+		catch (Exception E) {	
+			E.printStackTrace();
+		}
+		return 0; 
 	}
 }
