@@ -8,10 +8,11 @@ public class Transaction {
 	private final String INSERT_TRAN = "INSERT INTO tbl_transaction (transactionDate, userId, transactionType)"
 										+ "VALUES(CURDATE(), ?, ?)";
 	private DBconn con = new DBconn();
+	
 	private Connection conn = null;
 	private ResultSet rs = null;
 	private PreparedStatement ps = null;
-
+	
 	private int ID;
 	
 	public Transaction() {}
@@ -33,6 +34,8 @@ public class Transaction {
 			 */
 			int balance = selectBalance(UID);
 			
+			checkBalance(input, balance);
+			
 			balance -= input;
 			System.out.println(UID);
 			ps = conn.prepareStatement(SET_BALANCE);
@@ -44,6 +47,7 @@ public class Transaction {
 			System.out.println("Your new Balance is : " + balance);
 			// setting transaction, tagging for database
 			setTransaction(UID, Transaction[0]);
+			
 			cons.navigate(user);
 		} catch (SQLException e) {
 			// TODO: handle exception
@@ -53,7 +57,7 @@ public class Transaction {
 
 	public void setDeposit(int input, Users user) {
 		try {
-			
+			Console cons = new Console();
 			int UID = user.getID();
 
 			int balance = selectBalance(UID);
@@ -61,7 +65,7 @@ public class Transaction {
 			 * while(rs.next()) { balance = rs.getInt("balance");
 			 * System.out.println(balance); }
 			 */
-
+			checkBalance(input, balance);
 			balance += input;
 
 			ps = conn.prepareStatement(SET_BALANCE);
@@ -71,23 +75,25 @@ public class Transaction {
 			ps.executeUpdate();
 			setTransaction(UID, Transaction[1]);
 //			printBalance(user);
-			
+			cons.navigate(user);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public int printBalance(Users user) {
+	public void printBalance(Users user) {
 		try {
+			Console cons = new Console();
 			int UID = user.getID();
 
 			int balance = selectBalance(UID);
 			
 			setTransaction(UID, Transaction[2]);
-			return balance;
+			
+			cons.navigate(user);
 		} catch (Exception e) {
 			e.printStackTrace();
-			return 1;
+
 		}
 	}
 	
@@ -97,9 +103,13 @@ public class Transaction {
 	
 	public void setTransfer(int amount, int accID, Users user) {
 		try {
+			Console cons = new Console();
 			// this is for the main account transfer
 			int balance = selectBalance(user.getID());
 			ps = conn.prepareStatement(SET_BALANCE); 
+			
+			checkBalance(balance, amount);
+			
 			balance -= amount;
 			ps.setInt(1, balance);
 			ps.setInt(2, user.getID());
@@ -115,7 +125,7 @@ public class Transaction {
 			ps.setInt(2, accID);
 			ps.executeUpdate();
 			
-			
+			cons.navigate(user);
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -156,5 +166,13 @@ public class Transaction {
 			E.printStackTrace();
 		}
 		return 0; 
+	}
+	
+	public void checkBalance(int input, int balance) {
+		Console cons = new Console();
+		if (input > balance) {
+			System.out.println("Invalid, Not enough balance ");
+			cons.navigate(null);
+		}
 	}
 }
